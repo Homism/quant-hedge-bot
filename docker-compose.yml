@@ -133,6 +133,22 @@ services:
       --db-url sqlite:////freqtrade/user_data/tradesv3.dryrun.sqlite
       --logfile /freqtrade/user_data/logs/freqtrade.log
 
+  market-recorder:
+    image: python:3.12-slim
+    container_name: quant-hedge-market-recorder
+    restart: unless-stopped
+    environment:
+      RECORDER_SYMBOL: ${RECORDER_SYMBOL:-XAUTUSDT}
+      RECORDER_OKX_INST_ID: ${RECORDER_OKX_INST_ID:-XAUT-USDT}
+      RECORDER_SNAPSHOT_INTERVAL_MS: ${RECORDER_SNAPSHOT_INTERVAL_MS:-200}
+      RECORDER_STATE_PATH: /runtime/market_recorder/state.json
+      RECORDER_SNAPSHOT_PATH: /runtime/market_recorder/xaut_snapshots.jsonl
+      RECORDER_MAX_SNAPSHOT_BYTES: ${RECORDER_MAX_SNAPSHOT_BYTES:-104857600}
+    volumes:
+      - ./market_recorder:/app:ro
+      - ./runtime:/runtime
+    command: python /app/recorder.py
+
   dashboard:
     image: python:3.12-slim
     container_name: quant-hedge-dashboard
@@ -157,6 +173,8 @@ services:
       EXCHANGE_NAME: ${EXCHANGE_NAME:-binance}
       XAUT_EXCHANGE_NAME: ${XAUT_EXCHANGE_NAME:-binance}
       KILL_SWITCH_PATH: /runtime/KILL_SWITCH
+      MARKET_RECORDER_STATE_PATH: /runtime/market_recorder/state.json
+      MARKET_RECORDER_STALE_MS: ${MARKET_RECORDER_STALE_MS:-3000}
     volumes:
       - ./dashboard:/app:ro
       - ./runtime:/runtime:ro

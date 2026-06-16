@@ -4,10 +4,10 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-mkdir -p user_data_btc/logs user_data_eth/logs user_data_sol/logs user_data_xaut/logs runtime
+mkdir -p user_data_btc/logs user_data_eth/logs user_data_sol/logs user_data_xaut/logs runtime/market_recorder
 
-echo "Starting BTC, ETH, SOL, and the read-only Dashboard in forced dry-run mode..."
-docker compose up -d freqtrade-btc freqtrade-eth freqtrade-sol dashboard
+echo "Starting BTC, ETH, SOL, read-only market recorder, and Dashboard in forced dry-run mode..."
+docker compose up -d freqtrade-btc freqtrade-eth freqtrade-sol market-recorder dashboard
 
 XAUT_STARTED=false
 echo
@@ -26,6 +26,7 @@ echo "BTC Web UI: http://127.0.0.1:8081"
 echo "ETH Web UI: http://127.0.0.1:8082"
 echo "SOL Web UI: http://127.0.0.1:8083"
 echo "Dashboard: http://127.0.0.1:8090"
+echo "Market recorder: public websocket recorder, no web port, writes runtime/market_recorder/"
 if [[ "$XAUT_STARTED" == "true" ]]; then
   echo "XAUT Web UI: http://127.0.0.1:8084"
 else

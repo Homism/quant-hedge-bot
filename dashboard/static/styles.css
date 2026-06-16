@@ -93,6 +93,105 @@ p {
   overflow-wrap: anywhere;
 }
 
+.recorder-panel {
+  margin-bottom: 18px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.recorder-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.recorder-head h2,
+.recorder-spread h3,
+.recorder-source h3 {
+  margin: 0;
+  letter-spacing: 0;
+}
+
+.recorder-head h2 {
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.recorder-readonly {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border: 1px solid rgba(8, 116, 67, 0.24);
+  border-radius: 8px;
+  color: var(--ok);
+  background: rgba(8, 116, 67, 0.08);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.recorder-summary {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.recorder-summary .metric {
+  min-height: 72px;
+  padding: 12px;
+  box-shadow: none;
+}
+
+.recorder-summary .metric .value {
+  font-size: 17px;
+}
+
+.recorder-spread,
+.recorder-source {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-soft);
+}
+
+.recorder-spread {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.5fr) minmax(0, 1fr);
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.recorder-spread h3,
+.recorder-source h3 {
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.spread-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px 12px;
+}
+
+.recorder-sources {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.recorder-source-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
 .tv-panel {
   margin-bottom: 18px;
   padding: 18px;
@@ -439,6 +538,15 @@ td {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .recorder-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .recorder-spread,
+  .recorder-sources {
+    grid-template-columns: 1fr;
+  }
+
   .tv-panel-head {
     flex-direction: column;
   }
@@ -454,8 +562,19 @@ td {
     flex-direction: column;
   }
 
-  .overview {
+  .overview,
+  .recorder-summary {
     grid-template-columns: 1fr;
+  }
+
+  .recorder-panel {
+    padding: 14px;
+  }
+
+  .recorder-head,
+  .recorder-source-head {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .tv-panel {

@@ -17,6 +17,18 @@
       </header>
 
       <section class="overview" id="overview" aria-label="全局总览"></section>
+      <section class="recorder-panel" id="market-recorder" aria-label="高速行情 Recorder">
+        <div class="recorder-head">
+          <div>
+            <h2>高速行情 Recorder</h2>
+            <p>只读记录 Binance Futures 与 OKX public websocket 的 XAUT bid / ask / mid / spread / size / latency，每 200ms 保存一次快照。</p>
+          </div>
+          <div class="recorder-readonly">只读行情记录，不下单，不使用 API Key</div>
+        </div>
+        <div class="recorder-body" id="market-recorder-body">
+          <div class="empty small">正在读取 recorder 状态...</div>
+        </div>
+      </section>
       <section class="tv-panel" aria-label="TradingView 市场图表">
         <div class="tv-panel-head">
           <div>

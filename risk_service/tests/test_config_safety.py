@@ -74,7 +74,7 @@ def test_compose_forces_dry_run_and_localhost_ports() -> None:
 
 def test_run_dryrun_starts_xaut_only_after_validation() -> None:
     run_dryrun = (ROOT / "scripts/run_dryrun.sh").read_text(encoding="utf-8")
-    assert "freqtrade-btc freqtrade-eth freqtrade-sol dashboard" in run_dryrun
+    assert "freqtrade-btc freqtrade-eth freqtrade-sol market-recorder dashboard" in run_dryrun
     assert "./scripts/check_xaut_markets.sh --require-futures" in run_dryrun
     assert "docker compose --profile xaut-validated up -d freqtrade-xaut" in run_dryrun
     assert "docker compose up -d freqtrade-btc freqtrade-eth freqtrade-sol freqtrade-xaut" not in run_dryrun
@@ -106,6 +106,22 @@ def test_dashboard_is_read_only_and_has_no_trade_controls() -> None:
     assert "docker compose up -d dashboard" in run_dashboard
     assert "freqtrade-btc" not in run_dashboard
     assert "live.template" not in run_dashboard
+
+
+def test_market_recorder_is_read_only_public_data_only() -> None:
+    compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+    recorder = (ROOT / "market_recorder/recorder.py").read_text(encoding="utf-8")
+
+    assert "market-recorder:" in compose
+    assert "RECORDER_SNAPSHOT_INTERVAL_MS: ${RECORDER_SNAPSHOT_INTERVAL_MS:-200}" in compose
+    assert "RECORDER_STATE_PATH: /runtime/market_recorder/state.json" in compose
+    assert "ports:" not in compose.split("market-recorder:", 1)[1].split("dashboard:", 1)[0]
+    assert "FREQTRADE__EXCHANGE__KEY" not in compose.split("market-recorder:", 1)[1].split("dashboard:", 1)[0]
+    assert "trading_enabled\": False" in recorder
+    assert "api_key_required\": False" in recorder
+    assert "order_actions\": False" in recorder
+    assert "force" not in recorder.lower()
+    assert "withdraw" not in recorder.lower()
 
 
 def test_scripts_are_executable_and_do_not_start_live_templates() -> None:

@@ -19,6 +19,12 @@ Dashboard 只读，禁止做这些事：
 Dashboard 后端只提供 `GET /api/summary`，并拒绝 `POST`、`PUT`、`DELETE`。
 页面中不包含交易按钮。
 
+新增的 market recorder API 也是只读接口：
+
+- `GET /api/market-recorder`
+
+它只读取本地 `runtime/market_recorder/state.json`，不连接交易账户，不写交易配置，不发送订单。
+
 ## 本地端口
 
 Dashboard 只绑定 localhost：
@@ -72,6 +78,19 @@ ssh -i ~/.ssh/ovh_vps_ac72a73f \
 - 是否触发风控
 - 是否有机器人离线
 
+高速行情 Recorder：
+
+- recorder 是否运行
+- 是否只读
+- 是否需要 API Key
+- 快照采样间隔，默认 200ms
+- 已写入快照数量
+- Binance futures 主高速行情源状态
+- OKX public websocket 对照行情源状态
+- XAUT bid、ask、mid、盘口 spread、size、latency
+- XAUT Binance vs OKX mid spread
+- sell Binance / buy OKX 与 sell OKX / buy Binance 的方向性价差观察值
+
 每个 bot 卡片显示：
 
 - 在线状态
@@ -105,6 +124,8 @@ XAUT 卡片额外显示：
 ## 数据来源
 
 - Freqtrade REST API：只读读取 bot 状态、配置、PnL、交易记录和日志。
+- Binance futures public websocket：只读读取 XAUT best bid/ask。
+- OKX public websocket：只读读取 XAUT-USDT books5 对照盘口。
 - Binance/OKX public API：只读读取行情、K 线、资金费率和 XAUT 价格。
 - 本地文件：只读检查 kill switch 状态。
 

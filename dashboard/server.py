@@ -18,6 +18,8 @@ KILL_SWITCH_PATH = Path(os.getenv("KILL_SWITCH_PATH", "/runtime/KILL_SWITCH"))
 REQUEST_TIMEOUT = float(os.getenv("DASHBOARD_REQUEST_TIMEOUT", "3"))
 XAUT_VALIDATION_TTL = int(os.getenv("DASHBOARD_XAUT_VALIDATION_TTL", "300"))
 MARKET_DATA_TTL = int(os.getenv("DASHBOARD_MARKET_DATA_TTL", "30"))
+MARKET_RECORDER_STATE_PATH = Path(os.getenv("MARKET_RECORDER_STATE_PATH", "/runtime/market_recorder/state.json"))
+MARKET_RECORDER_STALE_MS = int(os.getenv("MARKET_RECORDER_STALE_MS", "3000"))
 _XAUT_VALIDATION_CACHE: dict[str, tuple[float, dict[str, Any]]] = {}
 _MARKET_DATA_CACHE: dict[str, tuple[float, dict[str, Any]]] = {}
 
@@ -337,6 +339,65 @@ def xaut_external_prices() -> dict[str, Any]:
     }
     _MARKET_DATA_CACHE["xaut:external_prices"] = (now, result)
     return result
+
+
+def load_market_recorder_state() -> dict[str, Any]:
+    checked_at_ms = int(time.time() * 1000)
+    base = {
+        "service": "market_recorder",
+        "read_only": True,
+        "trading_enabled": False,
+        "api_key_required": False,
+        "order_actions": False,
+        "state_file": str(MARKET_RECORDER_STATE_PATH),
+        "state_file_exists": MARKET_RECORDER_STATE_PATH.exists(),
+        "fresh": False,
+        "healthy": False,
+        "status": "not_started",
+        "age_ms": None,
+        "checked_at_ms": checked_at_ms,
+    }
+    if not MARKET_RECORDER_STATE_PATH.exists():
+        return base
+    try:
+        payload = json.loads(MARKET_RECORDER_STATE_PATH.read_text(encoding="utf-8"))
+    except Exception as exc:
+        base.update({"status": "state_error", "error": str(exc)})
+        return base
+    if not isinstance(payload, dict):
+        base.update({"status": "state_error", "error": "Recorder state is not a JSON object."})
+        return base
+
+    updated_at_ms = safe_int(payload.get("updated_at_ms"))
+    age_ms = checked_at_ms - updated_at_ms if updated_at_ms is not None else None
+    fresh = age_ms is not None and age_ms <= MARKET_RECORDER_STALE_MS
+    sources = payload.get("sources") if isinstance(payload.get("sources"), dict) else {}
+    connected_sources = [
+        source
+        for source in ("binance_futures", "okx_public")
+        if isinstance(sources.get(source), dict) and sources[source].get("connected") is True
+    ]
+    status = payload.get("status")
+    if not status:
+        status = "running" if fresh else "stale"
+    payload.update(
+        {
+            "read_only": True,
+            "trading_enabled": False,
+            "api_key_required": False,
+            "order_actions": False,
+            "state_file": str(MARKET_RECORDER_STATE_PATH),
+            "state_file_exists": True,
+            "fresh": fresh,
+            "healthy": fresh and len(connected_sources) == 2,
+            "status": status if fresh or status == "stopped" else "stale",
+            "age_ms": age_ms,
+            "checked_at_ms": checked_at_ms,
+            "connected_sources": connected_sources,
+            "expected_sources": ["binance_futures", "okx_public"],
+        }
+    )
+    return payload
 
 
 def xaut_validation(exchange: str) -> dict[str, Any]:
@@ -704,7 +765,7 @@ def build_summary() -> dict[str, Any]:
         "kill_switch_active": kill_switch_active,
         "updated_at": int(time.time()),
     }
-    return {"overview": overview, "bots": bots, "read_only": True}
+    return {"overview": overview, "bots": bots, "market_recorder": load_market_recorder_state(), "read_only": True}
 
 
 class DashboardHandler(BaseHTTPRequestHandler):
@@ -714,6 +775,9 @@ class DashboardHandler(BaseHTTPRequestHandler):
         parsed = parse.urlparse(self.path)
         if parsed.path == "/api/summary":
             self.send_json(build_summary())
+            return
+        if parsed.path == "/api/market-recorder":
+            self.send_json(load_market_recorder_state())
             return
         if parsed.path in {"/", "/index.html"}:
             self.send_file(STATIC_DIR / "index.html", "text/html; charset=utf-8")

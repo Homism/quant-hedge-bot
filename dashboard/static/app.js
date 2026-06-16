@@ -1,4 +1,5 @@
 const overviewEl = document.getElementById("overview");
+const recorderEl = document.getElementById("market-recorder-body");
 const gridEl = document.getElementById("bot-grid");
 const updatedEl = document.getElementById("updated-at");
 const tvMetaEl = document.getElementById("tv-chart-meta");
@@ -247,6 +248,83 @@ function tradeSummary(trade) {
   return `${fmtEmpty(trade.pair)} / ${fmtMoney(trade.simulated_pnl)}`;
 }
 
+function fmtMs(value) {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return "暂无数据";
+  return `${fmtNumber(value, 0)} ms`;
+}
+
+function fmtSigned(value, digits = 4) {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return "暂无数据";
+  const number = Number(value);
+  return `${number > 0 ? "+" : ""}${fmtNumber(number, digits)}`;
+}
+
+function recorderStatusPill(recorder) {
+  if (!recorder.state_file_exists) return pill("未启动", "warn");
+  if (recorder.healthy) return pill("运行中", "ok");
+  if (recorder.fresh) return pill("部分数据", "warn");
+  if (recorder.status === "stopped") return pill("已停止", "bad");
+  return pill("数据过期", "bad");
+}
+
+function renderRecorderQuote(title, quote, sourceStatus = {}) {
+  const connected = sourceStatus.connected === true;
+  return `
+    <section class="recorder-source">
+      <div class="recorder-source-head">
+        <h3>${escapeHtml(title)}</h3>
+        ${connected ? pill("已连接", "ok") : pill(sourceStatus.status || "未连接", "warn")}
+      </div>
+      <div class="mini-grid">
+        ${kv("Bid", fmtPrice(quote?.bid))}
+        ${kv("Ask", fmtPrice(quote?.ask))}
+        ${kv("Mid", fmtPrice(quote?.mid))}
+        ${kv("盘口 spread", quote?.spread_pct === null || quote?.spread_pct === undefined ? "暂无数据" : `${fmtNumber(quote.spread, 4)} / ${fmtPct(quote.spread_pct, 4)}`)}
+        ${kv("Bid size", fmtNumber(quote?.bid_size, 4))}
+        ${kv("Ask size", fmtNumber(quote?.ask_size, 4))}
+        ${kv("Latency", fmtMs(quote?.latency_ms ?? sourceStatus.last_latency_ms))}
+        ${kv("消息年龄", fmtMs(sourceStatus.last_message_age_ms))}
+      </div>
+      ${sourceStatus.last_error ? `<div class="notice warn">最近错误：${fmtEmpty(sourceStatus.last_error)}</div>` : ""}
+    </section>
+  `;
+}
+
+function renderRecorder(data) {
+  const recorder = data.market_recorder || {};
+  const quotes = recorder.quotes || {};
+  const sources = recorder.sources || {};
+  const spread = recorder.xaut_spread || {};
+  const spreadAvailable = spread.available === true;
+  const edgeState = spread.best_direction && spread.best_direction !== "none" ? "warn" : "ok";
+  recorderEl.innerHTML = `
+    <div class="recorder-summary">
+      ${metric("Recorder 状态", recorderStatusPill(recorder))}
+      ${metric("采样间隔", fmtMs(recorder.interval_ms))}
+      ${metric("快照数量", fmtNumber(recorder.snapshots_written, 0))}
+      ${metric("数据年龄", fmtMs(recorder.age_ms))}
+      ${metric("只读", fmtBool(recorder.read_only))}
+      ${metric("API Key", recorder.api_key_required ? "需要" : "不需要")}
+    </div>
+    <div class="recorder-spread">
+      <div>
+        <h3>XAUT Binance vs OKX 价差</h3>
+        <p>用于观察跨所延迟与价差，不参与自动交易。</p>
+      </div>
+      <div class="spread-grid">
+        ${kv("Mid spread", spreadAvailable ? `${fmtSigned(spread.mid_spread_abs)} / ${fmtSigned(spread.mid_spread_pct, 4)}%` : fmtReason(spread.reason))}
+        ${kv("卖 Binance / 买 OKX", spreadAvailable ? `${fmtSigned(spread.sell_binance_buy_okx_abs)} / ${fmtSigned(spread.sell_binance_buy_okx_pct, 4)}%` : "暂无数据")}
+        ${kv("卖 OKX / 买 Binance", spreadAvailable ? `${fmtSigned(spread.sell_okx_buy_binance_abs)} / ${fmtSigned(spread.sell_okx_buy_binance_pct, 4)}%` : "暂无数据")}
+        ${kv("当前最大方向", pill(spread.best_direction || "none", edgeState))}
+      </div>
+    </div>
+    <div class="recorder-sources">
+      ${renderRecorderQuote("Binance Futures 主高速源", quotes.binance_futures, sources.binance_futures)}
+      ${renderRecorderQuote("OKX Public 对照源", quotes.okx_public, sources.okx_public)}
+    </div>
+  `;
+}
+
 function renderOverview(data) {
   const overview = data.overview;
   const metrics = [
@@ -442,10 +520,12 @@ async function loadSummary() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
     renderOverview(data);
+    renderRecorder(data);
     gridEl.innerHTML = data.bots.map(renderBot).join("");
   } catch (error) {
     updatedEl.textContent = "仪表盘接口不可用";
     overviewEl.innerHTML = "";
+    recorderEl.innerHTML = `<div class="empty">无法加载 recorder 状态：${escapeHtml(error.message)}</div>`;
     gridEl.innerHTML = `<div class="empty">无法加载仪表盘数据：${escapeHtml(error.message)}</div>`;
   }
 }

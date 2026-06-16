@@ -10,6 +10,7 @@
 - Never add martingale, grid averaging, DCA, revenge trading, or uncontrolled scaling.
 - Never add trading buttons or trading actions to the Dashboard.
 - Keep Dashboard routes read-only. Dashboard may read status but must not place orders, close positions, cancel orders, or modify leverage.
+- Keep the market recorder read-only. It may consume public market data and write local snapshots, but must never use API keys, private endpoints, order endpoints, or trading actions.
 - Keep futures configs on isolated margin only.
 - Keep max leverage capped at 2x.
 - Keep max open trades at 1 per active bot unless explicitly approved.

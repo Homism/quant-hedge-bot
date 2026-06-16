@@ -17,6 +17,7 @@ APIs only.
 - `.env` is ignored by Git. Only `.env.example` is committed.
 - Web UI ports bind to `127.0.0.1` only.
 - The unified Dashboard is read-only and binds to `127.0.0.1:8090` only.
+- The market recorder uses public Binance/OKX websocket data only. It does not use API keys or submit orders.
 - Futures mode uses isolated margin only.
 - Max leverage is capped at 2x.
 - Max open trades is 1 per active bot.
@@ -38,6 +39,7 @@ APIs only.
 - `user_data_xaut/strategies/XautHedgeStrategy.py` is present only for validated XAUT futures use.
 - `risk_service/` contains pure risk helpers and tests.
 - `dashboard/` contains the read-only unified status dashboard.
+- `market_recorder/` records read-only XAUT Binance futures vs OKX public order-book snapshots.
 - `scripts/` contains dry-run, backtest, status, backup, and test helpers.
 - `docs/` contains operational documentation.
 
@@ -65,6 +67,7 @@ Local Web UI:
 - ETH: `http://127.0.0.1:8082`
 - SOL: `http://127.0.0.1:8083`
 - Dashboard: `http://127.0.0.1:8090`
+- Market recorder: no web port; writes `runtime/market_recorder/state.json` and `runtime/market_recorder/xaut_snapshots.jsonl`
 
 On a VPS, use an SSH tunnel:
 
@@ -74,6 +77,20 @@ ssh -L 8081:127.0.0.1:8081 -L 8082:127.0.0.1:8082 -L 8083:127.0.0.1:8083 -L 8084
 
 The Dashboard is status-only. It does not place orders, close trades, cancel
 orders, modify leverage, modify strategy files, or change `dry_run`.
+
+## XAUT Market Recorder
+
+`market-recorder` is a read-only public websocket recorder for hedge and latency-spread monitoring.
+It records XAUT best bid/ask snapshots from Binance USDT futures and OKX public websocket every 200ms.
+
+Recorded fields include:
+
+- bid, ask, mid, spread, bid size, ask size
+- exchange timestamp, receive timestamp, and estimated latency
+- Binance-vs-OKX XAUT mid spread
+- directional edge placeholders such as sell Binance / buy OKX
+
+It does not need API keys, does not connect to a trading account, and does not send orders.
 
 ## XAUT Market Validation
 

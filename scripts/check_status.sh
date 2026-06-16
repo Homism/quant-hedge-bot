@@ -18,4 +18,7 @@ echo
 echo "Recent Dashboard logs:"
 docker compose logs --tail=25 dashboard || true
 echo
+echo "Recent market recorder logs:"
+docker compose logs --tail=25 market-recorder || true
+echo
 echo "Optional XAUT status is validation-gated. Run scripts/check_xaut_markets.sh before enabling it."
