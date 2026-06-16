@@ -1,0 +1,66 @@
+services:
+  freqtrade-btc:
+    image: freqtradeorg/freqtrade:stable
+    container_name: quant-hedge-btc
+    restart: unless-stopped
+    environment:
+      FREQTRADE__DRY_RUN: "true"
+      FREQTRADE__EXCHANGE__NAME: ${EXCHANGE_NAME:-binance}
+      FREQTRADE__EXCHANGE__KEY: ${FREQTRADE__EXCHANGE__KEY:-}
+      FREQTRADE__EXCHANGE__SECRET: ${FREQTRADE__EXCHANGE__SECRET:-}
+      FREQTRADE__TELEGRAM__ENABLED: ${FREQTRADE__TELEGRAM__ENABLED:-false}
+      FREQTRADE__TELEGRAM__TOKEN: ${FREQTRADE__TELEGRAM__TOKEN:-}
+      FREQTRADE__TELEGRAM__CHAT_ID: ${FREQTRADE__TELEGRAM__CHAT_ID:-}
+      FREQTRADE__API_SERVER__USERNAME: ${BTC_FREQTRADE__API_SERVER__USERNAME:-freqtrader_btc}
+      FREQTRADE__API_SERVER__PASSWORD: ${BTC_FREQTRADE__API_SERVER__PASSWORD:-change-me-btc-local-only}
+      FREQTRADE__API_SERVER__JWT_SECRET_KEY: ${BTC_FREQTRADE__API_SERVER__JWT_SECRET_KEY:-change-me-btc-jwt-secret-local-only}
+      FREQTRADE__API_SERVER__WS_TOKEN: ${BTC_FREQTRADE__API_SERVER__WS_TOKEN:-change-me-btc-ws-local-only}
+      KILL_SWITCH_PATH: /freqtrade/runtime/KILL_SWITCH
+      PYTHONPATH: /freqtrade:/freqtrade/user_data/strategies
+    volumes:
+      - ./configs/btc.dryrun.json:/freqtrade/config.json:ro
+      - ./user_data_btc:/freqtrade/user_data
+      - ./risk_service:/freqtrade/risk_service:ro
+      - ./runtime:/freqtrade/runtime
+    ports:
+      - "127.0.0.1:8081:8080"
+    command: >
+      trade
+      --config /freqtrade/config.json
+      --userdir /freqtrade/user_data
+      --strategy BtcHedgeStrategy
+      --db-url sqlite:////freqtrade/user_data/tradesv3.dryrun.sqlite
+      --logfile /freqtrade/user_data/logs/freqtrade.log
+
+  freqtrade-eth:
+    image: freqtradeorg/freqtrade:stable
+    container_name: quant-hedge-eth
+    restart: unless-stopped
+    environment:
+      FREQTRADE__DRY_RUN: "true"
+      FREQTRADE__EXCHANGE__NAME: ${EXCHANGE_NAME:-binance}
+      FREQTRADE__EXCHANGE__KEY: ${FREQTRADE__EXCHANGE__KEY:-}
+      FREQTRADE__EXCHANGE__SECRET: ${FREQTRADE__EXCHANGE__SECRET:-}
+      FREQTRADE__TELEGRAM__ENABLED: ${FREQTRADE__TELEGRAM__ENABLED:-false}
+      FREQTRADE__TELEGRAM__TOKEN: ${FREQTRADE__TELEGRAM__TOKEN:-}
+      FREQTRADE__TELEGRAM__CHAT_ID: ${FREQTRADE__TELEGRAM__CHAT_ID:-}
+      FREQTRADE__API_SERVER__USERNAME: ${ETH_FREQTRADE__API_SERVER__USERNAME:-freqtrader_eth}
+      FREQTRADE__API_SERVER__PASSWORD: ${ETH_FREQTRADE__API_SERVER__PASSWORD:-change-me-eth-local-only}
+      FREQTRADE__API_SERVER__JWT_SECRET_KEY: ${ETH_FREQTRADE__API_SERVER__JWT_SECRET_KEY:-change-me-eth-jwt-secret-local-only}
+      FREQTRADE__API_SERVER__WS_TOKEN: ${ETH_FREQTRADE__API_SERVER__WS_TOKEN:-change-me-eth-ws-local-only}
+      KILL_SWITCH_PATH: /freqtrade/runtime/KILL_SWITCH
+      PYTHONPATH: /freqtrade:/freqtrade/user_data/strategies
+    volumes:
+      - ./configs/eth.dryrun.json:/freqtrade/config.json:ro
+      - ./user_data_eth:/freqtrade/user_data
+      - ./risk_service:/freqtrade/risk_service:ro
+      - ./runtime:/freqtrade/runtime
+    ports:
+      - "127.0.0.1:8082:8080"
+    command: >
+      trade
+      --config /freqtrade/config.json
+      --userdir /freqtrade/user_data
+      --strategy EthHedgeStrategy
+      --db-url sqlite:////freqtrade/user_data/tradesv3.dryrun.sqlite
+      --logfile /freqtrade/user_data/logs/freqtrade.log

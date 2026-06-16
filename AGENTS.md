@@ -1,0 +1,26 @@
+# AGENTS.md
+
+## Project Safety Rules
+
+- Never enable live trading without explicit user approval in a later task.
+- Never change dry-run defaults to live defaults.
+- Never add secrets, API keys, or tokens to the repository.
+- Never request or store withdrawal-enabled exchange keys.
+- Never add wallet integration, private-key handling, on-chain signing, or broadcasting.
+- Never add martingale, grid averaging, DCA, revenge trading, or uncontrolled scaling.
+- Keep futures configs on isolated margin only.
+- Keep max leverage capped at 2x.
+- Keep max open trades at 1 per bot unless explicitly approved.
+- Keep the 5% position-size cap, 2% daily-loss guard, consecutive-loss guard, and kill switch.
+- Always run `./scripts/run_tests.sh` after changing `risk_service` or strategy risk behavior.
+- Always explain strategy changes in plain language.
+- Prioritize capital protection and observability over profitability.
+
+## CodeGraph
+
+This project may use a CodeGraph MCP server (`codegraph_*` tools). Use CodeGraph
+for structural questions such as symbol location, call relationships, impact
+analysis, signatures, and focused context. Use native search only for literal
+text queries or after a specific file is already open.
+
+If CodeGraph is not initialized, ask before running `codegraph init -i`.
