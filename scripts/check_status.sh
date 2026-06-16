@@ -11,3 +11,8 @@ docker compose logs --tail=25 freqtrade-btc || true
 echo
 echo "Recent ETH logs:"
 docker compose logs --tail=25 freqtrade-eth || true
+echo
+echo "Recent SOL logs:"
+docker compose logs --tail=25 freqtrade-sol || true
+echo
+echo "Optional XAUT status is validation-gated. Run scripts/check_xaut_markets.sh before enabling it."

@@ -16,6 +16,8 @@ checklist is for a later explicit approval step only.
 - Confirm kill switch works.
 - Confirm stop scripts work.
 - Confirm monitoring and alerting work.
+- For XAUT, confirm the exchange supports a live futures pair. Do not use spot
+  XAUT as a futures short hedge substitute.
 - Prepare rollback: stop containers, remove API keys, rotate keys if needed.
 
 There is intentionally no live start script in this repository.

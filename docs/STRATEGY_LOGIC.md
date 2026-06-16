@@ -1,7 +1,8 @@
 # Strategy Logic
 
-The BTC and ETH strategies are conservative short hedge strategies for futures
-dry-run.
+The BTC, ETH, and SOL strategies are conservative short hedge strategies for
+futures dry-run. XAUT has the same defensive pattern, but it is validation-gated
+because XAUT spot availability does not prove futures availability.
 
 ## Indicators
 
@@ -38,3 +39,7 @@ A short hedge exits when:
 The bot is a defensive hedge assistant, not an aggressive profit maximizer.
 Position size is capped at 5% of available balance, leverage is capped at 2x,
 and dry-run is the default operating mode.
+
+SOL is treated as a standard crypto futures bot. XAUT is Tether Gold, so it must
+only be used for futures short hedging after `scripts/check_xaut_markets.sh`
+confirms a futures pair.

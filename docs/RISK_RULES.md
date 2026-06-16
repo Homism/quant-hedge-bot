@@ -7,7 +7,7 @@ These rules are mandatory for this project.
 - Futures mode only for hedge simulation.
 - Isolated margin only.
 - Max leverage is 2x.
-- Max open trades is 1 per bot.
+- Max open trades is 1 per active bot.
 - Max stake per position is 5% of available balance.
 - No automatic leverage increase.
 - No uncontrolled position scaling.
@@ -39,3 +39,9 @@ Remove it to permit dry-run entries again:
 ```bash
 rm runtime/KILL_SWITCH
 ```
+
+## XAUT Gate
+
+XAUT is Tether Gold. It can only be used for a short hedge when a futures market
+such as `XAUT/USDT:USDT` is confirmed. If only spot `XAUT/USDT` exists, keep it
+as watcher only and do not start the XAUT bot.

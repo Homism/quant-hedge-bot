@@ -11,6 +11,7 @@ config files, strategy files, docs, shell history, screenshots, or Git commits.
 - Use IP whitelist for the VPS public IP.
 - Rotate keys immediately if they may have leaked.
 - Keep `.env` local to the server and never commit it.
-- Use different keys for BTC and ETH bots if running leveraged live bots later.
+- Use different keys or dedicated sub-accounts per bot if running leveraged live bots later.
+- For XAUT, do not create or use keys until a futures pair is validated and a separate live-trading review is approved.
 
 Dry-run can run with empty API key placeholders.

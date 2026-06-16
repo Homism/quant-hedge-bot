@@ -10,8 +10,10 @@
 - Never add martingale, grid averaging, DCA, revenge trading, or uncontrolled scaling.
 - Keep futures configs on isolated margin only.
 - Keep max leverage capped at 2x.
-- Keep max open trades at 1 per bot unless explicitly approved.
+- Keep max open trades at 1 per active bot unless explicitly approved.
 - Keep the 5% position-size cap, 2% daily-loss guard, consecutive-loss guard, and kill switch.
+- Keep SOL in default dry-run only; never promote XAUT to default dry-run unless futures validation passes.
+- Never treat XAUT spot availability as permission to run a futures short hedge bot.
 - Always run `./scripts/run_tests.sh` after changing `risk_service` or strategy risk behavior.
 - Always explain strategy changes in plain language.
 - Prioritize capital protection and observability over profitability.

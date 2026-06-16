@@ -35,11 +35,13 @@ Ports are bound to localhost on the VPS:
 
 - BTC: `127.0.0.1:8081`
 - ETH: `127.0.0.1:8082`
+- SOL: `127.0.0.1:8083`
+- XAUT, only after futures validation passes: `127.0.0.1:8084`
 
 Use an SSH tunnel:
 
 ```bash
-ssh -L 8081:127.0.0.1:8081 -L 8082:127.0.0.1:8082 user@your-vps
+ssh -L 8081:127.0.0.1:8081 -L 8082:127.0.0.1:8082 -L 8083:127.0.0.1:8083 user@your-vps
 ```
 
 Do not expose Freqtrade Web UI directly to the public internet. If remote access

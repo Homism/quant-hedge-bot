@@ -13,7 +13,9 @@ tar \
   --exclude="backups" \
   --exclude="user_data_btc/data" \
   --exclude="user_data_eth/data" \
+  --exclude="user_data_sol/data" \
+  --exclude="user_data_xaut/data" \
   -czf "$ARCHIVE" \
-  configs user_data_btc user_data_eth risk_service docs scripts docker-compose.yml README.md AGENTS.md .env.example
+  configs user_data_btc user_data_eth user_data_sol user_data_xaut risk_service docs scripts docker-compose.yml README.md AGENTS.md .env.example
 
 echo "Backup written to $ARCHIVE"

@@ -1,6 +1,8 @@
-# BTC/ETH Freqtrade Quant Hedge Bot
+# BTC/ETH/SOL Freqtrade Quant Hedge Bot
 
-This repository is a dry-run-first BTC/ETH quantitative hedge bot built on Freqtrade.
+This repository is a dry-run-first BTC/ETH/SOL quantitative hedge bot built on Freqtrade.
+It also contains an XAUT market-validation watcher and a validation-gated XAUT
+template that must not be started unless a futures pair is confirmed.
 
 It is not a wallet project. It does not connect to blockchain wallets, private keys,
 on-chain signing, or on-chain broadcasting. It is designed for centralized exchange
@@ -16,7 +18,7 @@ APIs only.
 - Web UI ports bind to `127.0.0.1` only.
 - Futures mode uses isolated margin only.
 - Max leverage is capped at 2x.
-- Max open trades is 1 per bot.
+- Max open trades is 1 per active bot.
 - Max stake is capped at 5% of available balance.
 - Daily loss guard blocks new entries at 2%.
 - Three consecutive losing trades block new entries.
@@ -25,11 +27,14 @@ APIs only.
 
 ## Layout
 
-- `docker-compose.yml` runs `freqtrade-btc` and `freqtrade-eth`.
+- `docker-compose.yml` runs `freqtrade-btc`, `freqtrade-eth`, and `freqtrade-sol`.
+- `freqtrade-xaut` is profile-gated by `xaut-validated` and starts only after market validation passes.
 - `configs/*.dryrun.json` are the active dry-run configs.
 - `configs/*.live.template.json` are disabled reference templates only.
 - `user_data_btc/strategies/BtcHedgeStrategy.py` is the BTC strategy.
 - `user_data_eth/strategies/EthHedgeStrategy.py` is the ETH strategy.
+- `user_data_sol/strategies/SolHedgeStrategy.py` is the SOL strategy.
+- `user_data_xaut/strategies/XautHedgeStrategy.py` is present only for validated XAUT futures use.
 - `risk_service/` contains pure risk helpers and tests.
 - `scripts/` contains dry-run, backtest, status, backup, and test helpers.
 - `docs/` contains operational documentation.
@@ -56,25 +61,42 @@ Local Web UI:
 
 - BTC: `http://127.0.0.1:8081`
 - ETH: `http://127.0.0.1:8082`
+- SOL: `http://127.0.0.1:8083`
 
 On a VPS, use an SSH tunnel:
 
 ```bash
-ssh -L 8081:127.0.0.1:8081 -L 8082:127.0.0.1:8082 user@your-vps
+ssh -L 8081:127.0.0.1:8081 -L 8082:127.0.0.1:8082 -L 8083:127.0.0.1:8083 user@your-vps
 ```
+
+## XAUT Market Validation
+
+XAUT is Tether Gold. XAUT spot availability does not mean a futures short hedge
+is available. Check public markets first:
+
+```bash
+./scripts/check_xaut_markets.sh
+```
+
+If the script reports no futures pair, keep XAUT as watcher only. The default
+dry-run script also runs this validation and skips XAUT if validation fails.
 
 ## Backtest
 
 ```bash
 ./scripts/run_backtest_btc.sh
 ./scripts/run_backtest_eth.sh
+./scripts/run_backtest_sol.sh
 ```
+
+`./scripts/run_backtest_xaut.sh` blocks itself unless XAUT futures validation passes.
 
 Optional variables:
 
 ```bash
 DAYS=180 ./scripts/run_backtest_btc.sh
 TIMERANGE=20240101-20240601 ./scripts/run_backtest_eth.sh
+TIMEFRAME=1h ./scripts/run_backtest_sol.sh
 ```
 
 ## Kill Switch

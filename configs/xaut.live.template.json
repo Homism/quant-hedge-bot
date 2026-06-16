@@ -1,0 +1,57 @@
+// DANGEROUS LIVE TRADING TEMPLATE - DISABLED BY DEFAULT.
+// XAUT futures availability must be validated before any XAUT hedge bot use.
+// Live trading can lose money. Use a dedicated sub-account only.
+// Never enable withdrawal permission. Use IP whitelist. Start with very small size.
+// Confirm dry-run, market validation, and backtest results first.
+{
+  "$schema": "https://schema.freqtrade.io/schema.json",
+  "bot_name": "xaut-hedge-live-template-disabled",
+  "dry_run": true,
+  "trading_mode": "futures",
+  "margin_mode": "isolated",
+  "liquidation_buffer": 0.2,
+  "max_open_trades": 1,
+  "stake_currency": "USDT",
+  "stake_amount": "unlimited",
+  "tradable_balance_ratio": 0.99,
+  "fiat_display_currency": "USD",
+  "strategy": "XautHedgeStrategy",
+  "timeframe": "1h",
+  "exchange": {
+    "name": "binance",
+    "key": "",
+    "secret": "",
+    "ccxt_config": {
+      "enableRateLimit": true
+    },
+    "ccxt_async_config": {
+      "enableRateLimit": true
+    },
+    "pair_whitelist": [
+      "XAUT/USDT:USDT"
+    ],
+    "pair_blacklist": []
+  },
+  "pairlists": [
+    {
+      "method": "StaticPairList"
+    }
+  ],
+  "telegram": {
+    "enabled": false,
+    "token": "",
+    "chat_id": ""
+  },
+  "api_server": {
+    "enabled": true,
+    "listen_ip_address": "0.0.0.0",
+    "listen_port": 8080,
+    "verbosity": "error",
+    "enable_openapi": false,
+    "CORS_origins": [],
+    "username": "freqtrader_xaut",
+    "password": "change-me-before-any-live-use",
+    "jwt_secret_key": "change-me-before-any-live-use",
+    "ws_token": "change-me-before-any-live-use"
+  }
+}
