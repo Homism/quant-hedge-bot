@@ -1,6 +1,41 @@
 const overviewEl = document.getElementById("overview");
 const gridEl = document.getElementById("bot-grid");
 const updatedEl = document.getElementById("updated-at");
+const tvMetaEl = document.getElementById("tv-chart-meta");
+const tvNoteEl = document.getElementById("tv-chart-note");
+const tvLoadingEl = document.getElementById("tv-chart-loading");
+const tvWidgetContainerEl = document.getElementById("tradingview-widget-container");
+
+const tradingViewCharts = {
+  btc: {
+    label: "BTC",
+    symbol: "BINANCE:BTCUSDT",
+    note: "BTC/USDT 外部行情图表，仅用于观察。",
+  },
+  eth: {
+    label: "ETH",
+    symbol: "BINANCE:ETHUSDT",
+    note: "ETH/USDT 外部行情图表，仅用于观察。",
+  },
+  sol: {
+    label: "SOL",
+    symbol: "BINANCE:SOLUSDT",
+    note: "SOL/USDT 外部行情图表，仅用于观察。",
+  },
+  xau: {
+    label: "XAUUSD",
+    symbol: "OANDA:XAUUSD",
+    note: "XAUUSD 作为黄金现货参考，不参与机器人交易。",
+  },
+  xaut: {
+    label: "XAUT",
+    symbol: "BINANCE:XAUTUSDT",
+    note: "XAUT chart unavailable 时，请使用 XAUUSD 作为黄金参考；TradingView 是否支持该 symbol 取决于其免费 widget。",
+  },
+};
+
+let tradingViewScriptPromise = null;
+let activeTradingViewChart = "btc";
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -9,6 +44,93 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function setTradingViewMessage(message, state = "info") {
+  if (!tvLoadingEl) return;
+  tvLoadingEl.textContent = message;
+  tvLoadingEl.className = `tv-chart-loading ${state}`;
+  tvLoadingEl.style.display = "grid";
+  tvLoadingEl.hidden = false;
+}
+
+function hideTradingViewMessage() {
+  if (!tvLoadingEl) return;
+  tvLoadingEl.hidden = true;
+  tvLoadingEl.style.display = "none";
+}
+
+function loadTradingViewScript() {
+  if (window.TradingView) return Promise.resolve();
+  if (tradingViewScriptPromise) return tradingViewScriptPromise;
+  tradingViewScriptPromise = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "https://s3.tradingview.com/tv.js";
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("TradingView 脚本加载失败，请检查网络或浏览器拦截设置。"));
+    document.head.appendChild(script);
+  });
+  return tradingViewScriptPromise;
+}
+
+function resetTradingViewContainer() {
+  if (!tvWidgetContainerEl) return null;
+  tvWidgetContainerEl.innerHTML = '<div id="tradingview-widget"></div>';
+  return "tradingview-widget";
+}
+
+async function renderTradingViewChart(key) {
+  const chart = tradingViewCharts[key] || tradingViewCharts.btc;
+  activeTradingViewChart = key;
+  if (tvMetaEl) tvMetaEl.textContent = `${chart.label} · ${chart.symbol} · 15 分钟`;
+  if (tvNoteEl) {
+    tvNoteEl.textContent = `${chart.note} TradingView 图表仅用于观察行情。机器人交易逻辑仍由本地 dry-run 策略决定。`;
+  }
+  document.querySelectorAll("[data-tv-chart]").forEach((item) => {
+    item.classList.toggle("active", item.getAttribute("data-tv-chart") === key);
+  });
+  const containerId = resetTradingViewContainer();
+  if (!containerId) return;
+  setTradingViewMessage("正在加载 TradingView 图表...");
+  try {
+    await loadTradingViewScript();
+    hideTradingViewMessage();
+    new window.TradingView.widget({
+      autosize: true,
+      symbol: chart.symbol,
+      interval: "15",
+      timezone: "Asia/Seoul",
+      theme: "dark",
+      style: "1",
+      locale: "zh_CN",
+      enable_publishing: false,
+      allow_symbol_change: false,
+      hide_top_toolbar: false,
+      hide_side_toolbar: false,
+      withdateranges: true,
+      save_image: false,
+      calendar: false,
+      support_host: "https://www.tradingview.com",
+      container_id: containerId,
+    });
+  } catch (error) {
+    setTradingViewMessage(
+      `TradingView 图表暂时不可用：${error.message || "脚本加载失败"}。Bot 状态看板仍可正常使用。`,
+      "warn",
+    );
+  }
+}
+
+function setupTradingViewTabs() {
+  document.querySelectorAll("[data-tv-chart]").forEach((item) => {
+    item.addEventListener("click", (event) => {
+      event.preventDefault();
+      const key = item.getAttribute("data-tv-chart") || "btc";
+      renderTradingViewChart(key);
+    });
+  });
+  renderTradingViewChart(activeTradingViewChart);
 }
 
 function fmtBool(value) {
@@ -328,5 +450,6 @@ async function loadSummary() {
   }
 }
 
+setupTradingViewTabs();
 loadSummary();
 setInterval(loadSummary, 15000);

@@ -17,6 +17,32 @@
       </header>
 
       <section class="overview" id="overview" aria-label="全局总览"></section>
+      <section class="tv-panel" aria-label="TradingView 市场图表">
+        <div class="tv-panel-head">
+          <div>
+            <h2>TradingView 市场图表</h2>
+            <p>TradingView 图表仅用于观察行情。机器人交易逻辑仍由本地 dry-run 策略决定。</p>
+          </div>
+          <div class="tv-readonly">只读外部行情图表，不参与自动交易</div>
+        </div>
+        <nav class="tv-tabs" aria-label="图表切换">
+          <a href="#chart-btc" class="tv-tab active" data-tv-chart="btc">BTC</a>
+          <a href="#chart-eth" class="tv-tab" data-tv-chart="eth">ETH</a>
+          <a href="#chart-sol" class="tv-tab" data-tv-chart="sol">SOL</a>
+          <a href="#chart-xau" class="tv-tab" data-tv-chart="xau">XAUUSD</a>
+          <a href="#chart-xaut" class="tv-tab" data-tv-chart="xaut">XAUT</a>
+        </nav>
+        <div class="tv-chart-meta" id="tv-chart-meta">BTC · BINANCE:BTCUSDT · 15 分钟</div>
+        <div class="tv-chart-frame">
+          <div class="tv-chart-loading" id="tv-chart-loading">正在加载 TradingView 图表...</div>
+          <div class="tradingview-widget-container" id="tradingview-widget-container">
+            <div id="tradingview-widget"></div>
+          </div>
+        </div>
+        <div class="tv-chart-note" id="tv-chart-note">
+          免费 TradingView Widget 只用于行情观察，不连接交易账户，不发送交易指令。
+        </div>
+      </section>
       <section class="grid" id="bot-grid" aria-label="机器人状态卡片"></section>
     </main>
     <script src="/app.js"></script>

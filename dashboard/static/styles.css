@@ -93,6 +93,125 @@ p {
   overflow-wrap: anywhere;
 }
 
+.tv-panel {
+  margin-bottom: 18px;
+  padding: 18px;
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  background: #101828;
+  color: #f8fafc;
+  box-shadow: var(--shadow);
+}
+
+.tv-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.tv-panel h2 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.tv-panel p {
+  color: #b6c2d2;
+}
+
+.tv-readonly {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  border-radius: 8px;
+  color: #d8dee9;
+  background: rgba(15, 23, 42, 0.72);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tv-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.tv-tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 13px;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  border-radius: 8px;
+  color: #d8dee9;
+  background: rgba(15, 23, 42, 0.72);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.tv-tab.active {
+  color: #0f172a;
+  border-color: #f7c948;
+  background: #f7c948;
+}
+
+.tv-chart-meta,
+.tv-chart-note {
+  color: #b6c2d2;
+  font-size: 13px;
+}
+
+.tv-chart-meta {
+  margin-bottom: 10px;
+}
+
+.tv-chart-note {
+  margin-top: 10px;
+  line-height: 1.45;
+}
+
+.tv-chart-frame {
+  position: relative;
+  height: 520px;
+  min-height: 360px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  border-radius: 8px;
+  background: #050816;
+}
+
+.tradingview-widget-container,
+.tradingview-widget-container > div {
+  width: 100%;
+  height: 100%;
+}
+
+.tv-chart-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: #d8dee9;
+  text-align: center;
+  background: #050816;
+  font-size: 14px;
+}
+
+.tv-chart-loading[hidden] {
+  display: none;
+}
+
+.tv-chart-loading.warn {
+  color: #fbbf24;
+}
+
 .grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -320,6 +439,10 @@ td {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .tv-panel-head {
+    flex-direction: column;
+  }
+
   .section-grid {
     grid-template-columns: 1fr;
   }
@@ -333,6 +456,24 @@ td {
 
   .overview {
     grid-template-columns: 1fr;
+  }
+
+  .tv-panel {
+    padding: 14px;
+  }
+
+  .tv-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .tv-tab {
+    flex: 0 0 auto;
+  }
+
+  .tv-chart-frame {
+    height: 420px;
   }
 
   .card-head {
