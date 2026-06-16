@@ -37,13 +37,23 @@ Ports are bound to localhost on the VPS:
 - ETH: `127.0.0.1:8082`
 - SOL: `127.0.0.1:8083`
 - XAUT, only after futures validation passes: `127.0.0.1:8084`
+- Unified Dashboard: `127.0.0.1:8090`
 
 Use an SSH tunnel:
 
 ```bash
-ssh -L 8081:127.0.0.1:8081 -L 8082:127.0.0.1:8082 -L 8083:127.0.0.1:8083 user@your-vps
+ssh -L 8081:127.0.0.1:8081 -L 8082:127.0.0.1:8082 -L 8083:127.0.0.1:8083 -L 8084:127.0.0.1:8084 -L 8090:127.0.0.1:8090 user@your-vps
+```
+
+Dashboard-only tunnel:
+
+```bash
+ssh -L 8090:127.0.0.1:8090 root@your-vps
 ```
 
 Do not expose Freqtrade Web UI directly to the public internet. If remote access
 must be shared later, use a VPN or an HTTPS reverse proxy with Basic Auth and
 strict firewall rules.
+
+Do not expose the unified Dashboard directly to the public internet. It is
+read-only, but it still summarizes sensitive trading status.

@@ -25,6 +25,13 @@ These rules are mandatory for this project.
 - No DCA.
 - No revenge trading.
 - No position-adjustment callback.
+- No Dashboard trading buttons or Dashboard trading actions.
+
+## Dashboard Boundary
+
+The unified Dashboard is read-only. It may read Freqtrade REST API status and
+the local kill switch state. It must not place orders, close positions, cancel
+orders, change leverage, edit strategies, or change `dry_run`.
 
 ## Kill Switch
 

@@ -8,6 +8,8 @@
 - Never request or store withdrawal-enabled exchange keys.
 - Never add wallet integration, private-key handling, on-chain signing, or broadcasting.
 - Never add martingale, grid averaging, DCA, revenge trading, or uncontrolled scaling.
+- Never add trading buttons or trading actions to the Dashboard.
+- Keep Dashboard routes read-only. Dashboard may read status but must not place orders, close positions, cancel orders, or modify leverage.
 - Keep futures configs on isolated margin only.
 - Keep max leverage capped at 2x.
 - Keep max open trades at 1 per active bot unless explicitly approved.

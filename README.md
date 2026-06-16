@@ -16,6 +16,7 @@ APIs only.
 - API keys are not stored in config files.
 - `.env` is ignored by Git. Only `.env.example` is committed.
 - Web UI ports bind to `127.0.0.1` only.
+- The unified Dashboard is read-only and binds to `127.0.0.1:8090` only.
 - Futures mode uses isolated margin only.
 - Max leverage is capped at 2x.
 - Max open trades is 1 per active bot.
@@ -36,6 +37,7 @@ APIs only.
 - `user_data_sol/strategies/SolHedgeStrategy.py` is the SOL strategy.
 - `user_data_xaut/strategies/XautHedgeStrategy.py` is present only for validated XAUT futures use.
 - `risk_service/` contains pure risk helpers and tests.
+- `dashboard/` contains the read-only unified status dashboard.
 - `scripts/` contains dry-run, backtest, status, backup, and test helpers.
 - `docs/` contains operational documentation.
 
@@ -62,12 +64,16 @@ Local Web UI:
 - BTC: `http://127.0.0.1:8081`
 - ETH: `http://127.0.0.1:8082`
 - SOL: `http://127.0.0.1:8083`
+- Dashboard: `http://127.0.0.1:8090`
 
 On a VPS, use an SSH tunnel:
 
 ```bash
-ssh -L 8081:127.0.0.1:8081 -L 8082:127.0.0.1:8082 -L 8083:127.0.0.1:8083 user@your-vps
+ssh -L 8081:127.0.0.1:8081 -L 8082:127.0.0.1:8082 -L 8083:127.0.0.1:8083 -L 8084:127.0.0.1:8084 -L 8090:127.0.0.1:8090 user@your-vps
 ```
+
+The Dashboard is status-only. It does not place orders, close trades, cancel
+orders, modify leverage, modify strategy files, or change `dry_run`.
 
 ## XAUT Market Validation
 

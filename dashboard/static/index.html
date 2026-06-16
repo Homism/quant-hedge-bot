@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quant Hedge Dry-Run Dashboard</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <h1>Quant Hedge Dry-Run Dashboard</h1>
+          <p>Read-only BTC / ETH / SOL / XAUT Freqtrade status</p>
+        </div>
+        <div class="timestamp" id="updated-at">Loading...</div>
+      </header>
+
+      <section class="overview" id="overview" aria-label="Global overview"></section>
+      <section class="grid" id="bot-grid" aria-label="Bot status cards"></section>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+</html>

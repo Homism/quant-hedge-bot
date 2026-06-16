@@ -59,10 +59,12 @@ def test_compose_forces_dry_run_and_localhost_ports() -> None:
     assert '"127.0.0.1:8082:8080"' in compose
     assert '"127.0.0.1:8083:8080"' in compose
     assert '"127.0.0.1:8084:8080"' in compose
+    assert '"127.0.0.1:8090:8090"' in compose
     assert '"8081:8080"' not in compose
     assert '"8082:8080"' not in compose
     assert '"8083:8080"' not in compose
     assert '"8084:8080"' not in compose
+    assert '"8090:8090"' not in compose
     assert "configs/btc.live.template.json" not in compose
     assert "configs/eth.live.template.json" not in compose
     assert "configs/sol.live.template.json" not in compose
@@ -72,7 +74,7 @@ def test_compose_forces_dry_run_and_localhost_ports() -> None:
 
 def test_run_dryrun_starts_xaut_only_after_validation() -> None:
     run_dryrun = (ROOT / "scripts/run_dryrun.sh").read_text(encoding="utf-8")
-    assert "freqtrade-btc freqtrade-eth freqtrade-sol" in run_dryrun
+    assert "freqtrade-btc freqtrade-eth freqtrade-sol dashboard" in run_dryrun
     assert "./scripts/check_xaut_markets.sh --require-futures" in run_dryrun
     assert "docker compose --profile xaut-validated up -d freqtrade-xaut" in run_dryrun
     assert "docker compose up -d freqtrade-btc freqtrade-eth freqtrade-sol freqtrade-xaut" not in run_dryrun
@@ -82,6 +84,28 @@ def test_xaut_backtest_is_validation_gated() -> None:
     run_backtest = (ROOT / "scripts/run_backtest_xaut.sh").read_text(encoding="utf-8")
     assert "./scripts/check_xaut_markets.sh --require-futures" in run_backtest
     assert "docker compose --profile xaut-validated run --rm freqtrade-xaut" in run_backtest
+
+
+def test_dashboard_is_read_only_and_has_no_trade_controls() -> None:
+    server = (ROOT / "dashboard/server.py").read_text(encoding="utf-8")
+    index = (ROOT / "dashboard/static/index.html").read_text(encoding="utf-8")
+    app = (ROOT / "dashboard/static/app.js").read_text(encoding="utf-8")
+    run_dashboard = (ROOT / "scripts/run_dashboard.sh").read_text(encoding="utf-8")
+
+    assert "def do_GET" in server
+    assert "def do_POST" in server and "METHOD_NOT_ALLOWED" in server
+    assert "def do_PUT" in server and "def do_DELETE" in server
+    assert "/api/summary" in server
+    assert "/api/v1/force" not in server
+    assert "/api/v1/forcebuy" not in server
+    assert "/api/v1/forcesell" not in server
+    assert "/api/v1/forceexit" not in server
+    assert "/api/v1/cancel" not in server
+    assert "<button" not in index.lower()
+    assert "<button" not in app.lower()
+    assert "docker compose up -d dashboard" in run_dashboard
+    assert "freqtrade-btc" not in run_dashboard
+    assert "live.template" not in run_dashboard
 
 
 def test_scripts_are_executable_and_do_not_start_live_templates() -> None:

@@ -6,8 +6,8 @@ cd "$ROOT_DIR"
 
 mkdir -p user_data_btc/logs user_data_eth/logs user_data_sol/logs user_data_xaut/logs runtime
 
-echo "Starting BTC, ETH, and SOL Freqtrade bots in forced dry-run mode..."
-docker compose up -d freqtrade-btc freqtrade-eth freqtrade-sol
+echo "Starting BTC, ETH, SOL, and the read-only Dashboard in forced dry-run mode..."
+docker compose up -d freqtrade-btc freqtrade-eth freqtrade-sol dashboard
 
 XAUT_STARTED=false
 echo
@@ -25,6 +25,7 @@ echo "Dry-run services started."
 echo "BTC Web UI: http://127.0.0.1:8081"
 echo "ETH Web UI: http://127.0.0.1:8082"
 echo "SOL Web UI: http://127.0.0.1:8083"
+echo "Dashboard: http://127.0.0.1:8090"
 if [[ "$XAUT_STARTED" == "true" ]]; then
   echo "XAUT Web UI: http://127.0.0.1:8084"
 else
@@ -32,4 +33,4 @@ else
 fi
 echo
 echo "On a VPS, use SSH tunnels instead of exposing ports publicly:"
-echo "ssh -L 8081:127.0.0.1:8081 -L 8082:127.0.0.1:8082 -L 8083:127.0.0.1:8083 -L 8084:127.0.0.1:8084 user@your-vps"
+echo "ssh -L 8081:127.0.0.1:8081 -L 8082:127.0.0.1:8082 -L 8083:127.0.0.1:8083 -L 8084:127.0.0.1:8084 -L 8090:127.0.0.1:8090 user@your-vps"

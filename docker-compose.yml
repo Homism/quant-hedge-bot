@@ -132,3 +132,34 @@ services:
       --strategy XautHedgeStrategy
       --db-url sqlite:////freqtrade/user_data/tradesv3.dryrun.sqlite
       --logfile /freqtrade/user_data/logs/freqtrade.log
+
+  dashboard:
+    image: python:3.12-slim
+    container_name: quant-hedge-dashboard
+    restart: unless-stopped
+    environment:
+      DASHBOARD_HOST: 0.0.0.0
+      DASHBOARD_PORT: "8090"
+      DASHBOARD_REQUEST_TIMEOUT: ${DASHBOARD_REQUEST_TIMEOUT:-3}
+      DASHBOARD_XAUT_VALIDATION_TTL: ${DASHBOARD_XAUT_VALIDATION_TTL:-300}
+      DASHBOARD_BTC_API_URL: http://freqtrade-btc:8080
+      DASHBOARD_ETH_API_URL: http://freqtrade-eth:8080
+      DASHBOARD_SOL_API_URL: http://freqtrade-sol:8080
+      DASHBOARD_XAUT_API_URL: http://freqtrade-xaut:8080
+      BTC_FREQTRADE__API_SERVER__USERNAME: ${BTC_FREQTRADE__API_SERVER__USERNAME:-freqtrader_btc}
+      BTC_FREQTRADE__API_SERVER__PASSWORD: ${BTC_FREQTRADE__API_SERVER__PASSWORD:-change-me-btc-local-only}
+      ETH_FREQTRADE__API_SERVER__USERNAME: ${ETH_FREQTRADE__API_SERVER__USERNAME:-freqtrader_eth}
+      ETH_FREQTRADE__API_SERVER__PASSWORD: ${ETH_FREQTRADE__API_SERVER__PASSWORD:-change-me-eth-local-only}
+      SOL_FREQTRADE__API_SERVER__USERNAME: ${SOL_FREQTRADE__API_SERVER__USERNAME:-freqtrader_sol}
+      SOL_FREQTRADE__API_SERVER__PASSWORD: ${SOL_FREQTRADE__API_SERVER__PASSWORD:-change-me-sol-local-only}
+      XAUT_FREQTRADE__API_SERVER__USERNAME: ${XAUT_FREQTRADE__API_SERVER__USERNAME:-freqtrader_xaut}
+      XAUT_FREQTRADE__API_SERVER__PASSWORD: ${XAUT_FREQTRADE__API_SERVER__PASSWORD:-change-me-xaut-local-only}
+      EXCHANGE_NAME: ${EXCHANGE_NAME:-binance}
+      XAUT_EXCHANGE_NAME: ${XAUT_EXCHANGE_NAME:-binance}
+      KILL_SWITCH_PATH: /runtime/KILL_SWITCH
+    volumes:
+      - ./dashboard:/app:ro
+      - ./runtime:/runtime:ro
+    ports:
+      - "127.0.0.1:8090:8090"
+    command: python /app/server.py
