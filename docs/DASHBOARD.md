@@ -85,11 +85,21 @@ ssh -i ~/.ssh/ovh_vps_ac72a73f \
 - 是否需要 API Key
 - 快照采样间隔，默认 200ms
 - 已写入快照数量
+- 目标保留小时数，默认 72 小时
+- 已保留小时数、文件数、压缩文件数、磁盘占用
 - Binance futures 主高速行情源状态
 - OKX public websocket 对照行情源状态
 - XAUT bid、ask、mid、盘口 spread、size、latency
 - XAUT Binance vs OKX mid spread
 - sell Binance / buy OKX 与 sell OKX / buy Binance 的方向性价差观察值
+
+Recorder 存储方式：
+
+- `runtime/market_recorder/state.json` 保存 Dashboard 当前状态。
+- `runtime/market_recorder/xaut_snapshots.jsonl` 继续作为兼容流文件。
+- `runtime/market_recorder/hourly/xaut_YYYY-MM-DD_HH.jsonl` 保存每小时研究数据。
+- 结束的小时文件会自动 gzip 压缩。
+- 默认保留 72 小时，可用 `RECORDER_RETENTION_HOURS` 调整。
 
 每个 bot 卡片显示：
 

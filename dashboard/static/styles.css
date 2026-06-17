@@ -150,6 +150,7 @@ p {
   font-size: 17px;
 }
 
+.recorder-retention,
 .recorder-spread,
 .recorder-source {
   min-width: 0;
@@ -159,6 +160,7 @@ p {
   background: var(--panel-soft);
 }
 
+.recorder-retention,
 .recorder-spread {
   display: grid;
   grid-template-columns: minmax(220px, 0.5fr) minmax(0, 1fr);
@@ -166,6 +168,7 @@ p {
   margin-bottom: 12px;
 }
 
+.recorder-retention h3,
 .recorder-spread h3,
 .recorder-source h3 {
   font-size: 15px;
@@ -542,6 +545,7 @@ td {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .recorder-retention,
   .recorder-spread,
   .recorder-sources {
     grid-template-columns: 1fr;

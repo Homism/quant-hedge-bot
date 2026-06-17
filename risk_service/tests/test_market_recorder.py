@@ -1,7 +1,11 @@
 from market_recorder.recorder import (
+    append_hourly_snapshot,
+    hourly_snapshot_path,
+    maintain_hourly_retention,
     cross_spread,
     quote_from_binance_book_ticker,
     quote_from_okx_books5,
+    retention_summary,
 )
 
 
@@ -97,3 +101,49 @@ def test_xaut_cross_spread_records_directional_edges() -> None:
     assert spread["binance_latency_ms"] == 50
     assert spread["okx_latency_ms"] == 80
 
+
+def test_hourly_retention_writes_compresses_and_deletes_old_files(tmp_path) -> None:
+    symbol = "XAUTUSDT"
+    current_ms = 1_784_044_800_000  # 2026-07-14T16:00:00Z
+    old_ms = current_ms - 3 * 60 * 60 * 1000
+    previous_ms = current_ms - 60 * 60 * 1000
+    payload = {
+        "updated_at_ms": current_ms,
+        "read_only": True,
+        "trading_enabled": False,
+        "quotes": {},
+    }
+
+    current_path = append_hourly_snapshot(tmp_path, symbol, payload)
+    assert current_path == hourly_snapshot_path(tmp_path, symbol, current_ms)
+    assert current_path.exists()
+
+    old_path = hourly_snapshot_path(tmp_path, symbol, old_ms)
+    old_path.write_text('{"old":true}\n', encoding="utf-8")
+    previous_path = hourly_snapshot_path(tmp_path, symbol, previous_ms)
+    previous_path.write_text('{"previous":true}\n', encoding="utf-8")
+
+    summary = maintain_hourly_retention(tmp_path, symbol, retention_hours=2, current_timestamp_ms=current_ms)
+
+    assert not old_path.exists()
+    assert not (old_path.with_suffix(f"{old_path.suffix}.gz")).exists()
+    assert not previous_path.exists()
+    assert previous_path.with_suffix(f"{previous_path.suffix}.gz").exists()
+    assert current_path.exists()
+    assert summary["retention_hours_target"] == 2
+    assert summary["retained_hours"] == 2
+    assert summary["compressed_file_count"] == 1
+    assert summary["uncompressed_file_count"] == 1
+
+
+def test_retention_summary_reports_hourly_disk_usage(tmp_path) -> None:
+    symbol = "XAUTUSDT"
+    timestamp_ms = 1_784_044_800_000
+    append_hourly_snapshot(tmp_path, symbol, {"updated_at_ms": timestamp_ms, "x": 1})
+    summary = retention_summary(tmp_path, symbol)
+
+    assert summary["file_count"] == 1
+    assert summary["retained_hours"] == 1
+    assert summary["total_bytes"] > 0
+    assert summary["oldest_hour"] == "2026-07-14T16:00:00Z"
+    assert summary["newest_hour"] == "2026-07-14T16:00:00Z"

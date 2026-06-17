@@ -114,7 +114,9 @@ def test_market_recorder_is_read_only_public_data_only() -> None:
 
     assert "market-recorder:" in compose
     assert "RECORDER_SNAPSHOT_INTERVAL_MS: ${RECORDER_SNAPSHOT_INTERVAL_MS:-200}" in compose
+    assert "RECORDER_RETENTION_HOURS: ${RECORDER_RETENTION_HOURS:-72}" in compose
     assert "RECORDER_STATE_PATH: /runtime/market_recorder/state.json" in compose
+    assert "RECORDER_HOURLY_DIR: /runtime/market_recorder/hourly" in compose
     assert "ports:" not in compose.split("market-recorder:", 1)[1].split("dashboard:", 1)[0]
     assert "FREQTRADE__EXCHANGE__KEY" not in compose.split("market-recorder:", 1)[1].split("dashboard:", 1)[0]
     assert "trading_enabled\": False" in recorder

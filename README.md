@@ -90,6 +90,13 @@ Recorded fields include:
 - Binance-vs-OKX XAUT mid spread
 - directional edge placeholders such as sell Binance / buy OKX
 
+Recorder storage:
+
+- Compatibility stream: `runtime/market_recorder/xaut_snapshots.jsonl`
+- Hourly research files: `runtime/market_recorder/hourly/xaut_YYYY-MM-DD_HH.jsonl`
+- Completed hour files are gzip-compressed automatically.
+- Default retention is 72 hours, controlled by `RECORDER_RETENTION_HOURS`.
+
 It does not need API keys, does not connect to a trading account, and does not send orders.
 
 ## XAUT Market Validation

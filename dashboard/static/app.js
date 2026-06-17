@@ -253,6 +253,15 @@ function fmtMs(value) {
   return `${fmtNumber(value, 0)} ms`;
 }
 
+function fmtBytes(value) {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return "暂无数据";
+  const bytes = Number(value);
+  if (bytes >= 1024 * 1024 * 1024) return `${fmtNumber(bytes / 1024 / 1024 / 1024, 2)} GB`;
+  if (bytes >= 1024 * 1024) return `${fmtNumber(bytes / 1024 / 1024, 2)} MB`;
+  if (bytes >= 1024) return `${fmtNumber(bytes / 1024, 2)} KB`;
+  return `${fmtNumber(bytes, 0)} B`;
+}
+
 function fmtSigned(value, digits = 4) {
   if (value === null || value === undefined || Number.isNaN(Number(value))) return "暂无数据";
   const number = Number(value);
@@ -295,6 +304,7 @@ function renderRecorder(data) {
   const quotes = recorder.quotes || {};
   const sources = recorder.sources || {};
   const spread = recorder.xaut_spread || {};
+  const retention = recorder.retention || {};
   const spreadAvailable = spread.available === true;
   const edgeState = spread.best_direction && spread.best_direction !== "none" ? "warn" : "ok";
   recorderEl.innerHTML = `
@@ -305,6 +315,17 @@ function renderRecorder(data) {
       ${metric("数据年龄", fmtMs(recorder.age_ms))}
       ${metric("只读", fmtBool(recorder.read_only))}
       ${metric("API Key", recorder.api_key_required ? "需要" : "不需要")}
+    </div>
+    <div class="recorder-retention">
+      <h3>数据留存</h3>
+      <div class="spread-grid">
+        ${kv("目标保留", `${fmtNumber(retention.retention_hours_target, 0)} 小时`)}
+        ${kv("已保留小时", `${fmtNumber(retention.retained_hours, 0)} 小时`)}
+        ${kv("文件数量", fmtNumber(retention.file_count, 0))}
+        ${kv("压缩文件", fmtNumber(retention.compressed_file_count, 0))}
+        ${kv("磁盘占用", fmtBytes(retention.total_bytes))}
+        ${kv("最新小时", fmtDate(retention.newest_hour))}
+      </div>
     </div>
     <div class="recorder-spread">
       <div>

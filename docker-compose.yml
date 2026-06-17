@@ -143,6 +143,8 @@ services:
       RECORDER_SNAPSHOT_INTERVAL_MS: ${RECORDER_SNAPSHOT_INTERVAL_MS:-200}
       RECORDER_STATE_PATH: /runtime/market_recorder/state.json
       RECORDER_SNAPSHOT_PATH: /runtime/market_recorder/xaut_snapshots.jsonl
+      RECORDER_HOURLY_DIR: /runtime/market_recorder/hourly
+      RECORDER_RETENTION_HOURS: ${RECORDER_RETENTION_HOURS:-72}
       RECORDER_MAX_SNAPSHOT_BYTES: ${RECORDER_MAX_SNAPSHOT_BYTES:-104857600}
     volumes:
       - ./market_recorder:/app:ro

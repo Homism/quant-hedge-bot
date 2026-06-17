@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import base64
+import calendar
+import gzip
 import hashlib
 import json
 import os
@@ -22,6 +24,8 @@ DEFAULT_SYMBOL = "XAUTUSDT"
 DEFAULT_OKX_INST_ID = "XAUT-USDT"
 DEFAULT_INTERVAL_MS = 200
 DEFAULT_MAX_SNAPSHOT_BYTES = 100 * 1024 * 1024
+DEFAULT_RETENTION_HOURS = 72
+RETENTION_MAINTENANCE_INTERVAL_MS = 60_000
 
 
 def now_ms() -> int:
@@ -32,6 +36,15 @@ def iso_from_ms(value: int | None) -> str | None:
     if value is None:
         return None
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(value / 1000))
+
+
+def hour_bucket_from_ms(value: int) -> str:
+    return time.strftime("%Y-%m-%d_%H", time.gmtime(value / 1000))
+
+
+def asset_prefix(symbol: str) -> str:
+    cleaned = "".join(ch for ch in symbol.lower() if ch.isalnum())
+    return cleaned.removesuffix("usdt") or cleaned or "market"
 
 
 def safe_float(value: Any) -> float | None:
@@ -513,6 +526,106 @@ def append_snapshot(path: Path, payload: dict[str, Any], *, max_bytes: int) -> N
         handle.write(json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n")
 
 
+def hourly_snapshot_path(directory: Path, symbol: str, timestamp_ms: int) -> Path:
+    return directory / f"{asset_prefix(symbol)}_{hour_bucket_from_ms(timestamp_ms)}.jsonl"
+
+
+def append_hourly_snapshot(directory: Path, symbol: str, payload: dict[str, Any]) -> Path:
+    timestamp_ms = safe_int(payload.get("updated_at_ms")) or now_ms()
+    path = hourly_snapshot_path(directory, symbol, timestamp_ms)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n")
+    return path
+
+
+def parse_hourly_file(path: Path, prefix: str) -> int | None:
+    name = path.name
+    suffix = ".jsonl.gz" if name.endswith(".jsonl.gz") else ".jsonl" if name.endswith(".jsonl") else None
+    if suffix is None or not name.startswith(f"{prefix}_"):
+        return None
+    bucket = name.removeprefix(f"{prefix}_").removesuffix(suffix)
+    try:
+        parsed = time.strptime(bucket, "%Y-%m-%d_%H")
+    except ValueError:
+        return None
+    return calendar.timegm(parsed) * 1000
+
+
+def compress_file(path: Path) -> Path:
+    gz_path = path.with_suffix(f"{path.suffix}.gz")
+    if gz_path.exists():
+        path.unlink()
+        return gz_path
+    tmp_path = gz_path.with_suffix(f"{gz_path.suffix}.tmp")
+    with path.open("rb") as source, gzip.open(tmp_path, "wb", compresslevel=6) as target:
+        while True:
+            chunk = source.read(1024 * 1024)
+            if not chunk:
+                break
+            target.write(chunk)
+    tmp_path.replace(gz_path)
+    path.unlink()
+    return gz_path
+
+
+def retention_summary(directory: Path, symbol: str) -> dict[str, Any]:
+    prefix = asset_prefix(symbol)
+    files: list[dict[str, Any]] = []
+    if directory.exists():
+        for path in directory.iterdir():
+            hour_ms = parse_hourly_file(path, prefix)
+            if hour_ms is None or not path.is_file():
+                continue
+            files.append(
+                {
+                    "name": path.name,
+                    "size_bytes": path.stat().st_size,
+                    "hour_ms": hour_ms,
+                    "hour": iso_from_ms(hour_ms),
+                    "compressed": path.name.endswith(".gz"),
+                }
+            )
+    files.sort(key=lambda item: item["hour_ms"])
+    unique_hours = sorted({item["hour_ms"] for item in files})
+    total_bytes = sum(int(item["size_bytes"]) for item in files)
+    return {
+        "hourly_dir": str(directory),
+        "file_count": len(files),
+        "compressed_file_count": sum(1 for item in files if item["compressed"]),
+        "uncompressed_file_count": sum(1 for item in files if not item["compressed"]),
+        "retained_hours": len(unique_hours),
+        "oldest_hour": iso_from_ms(unique_hours[0]) if unique_hours else None,
+        "newest_hour": iso_from_ms(unique_hours[-1]) if unique_hours else None,
+        "total_bytes": total_bytes,
+        "total_mb": round(total_bytes / 1024 / 1024, 3),
+        "latest_files": files[-5:],
+    }
+
+
+def maintain_hourly_retention(directory: Path, symbol: str, *, retention_hours: int, current_timestamp_ms: int) -> dict[str, Any]:
+    prefix = asset_prefix(symbol)
+    current_hour = hour_bucket_from_ms(current_timestamp_ms)
+    cutoff_ms = current_timestamp_ms - retention_hours * 60 * 60 * 1000
+    directory.mkdir(parents=True, exist_ok=True)
+
+    for path in list(directory.iterdir()):
+        hour_ms = parse_hourly_file(path, prefix)
+        if hour_ms is None or not path.is_file():
+            continue
+        if hour_ms < cutoff_ms:
+            path.unlink()
+            continue
+        if path.name.endswith(".jsonl") and current_hour not in path.name:
+            compress_file(path)
+    summary = retention_summary(directory, symbol)
+    summary["retention_hours_target"] = retention_hours
+    summary["current_hour"] = current_hour
+    summary["last_maintenance_at_ms"] = current_timestamp_ms
+    summary["last_maintenance_at"] = iso_from_ms(current_timestamp_ms)
+    return summary
+
+
 def env_int(name: str, default: int) -> int:
     value = os.getenv(name)
     if not value:
@@ -529,7 +642,9 @@ def main() -> int:
     interval_ms = max(50, env_int("RECORDER_SNAPSHOT_INTERVAL_MS", DEFAULT_INTERVAL_MS))
     state_path = Path(os.getenv("RECORDER_STATE_PATH", "/runtime/market_recorder/state.json"))
     snapshot_path = Path(os.getenv("RECORDER_SNAPSHOT_PATH", "/runtime/market_recorder/xaut_snapshots.jsonl"))
+    hourly_dir = Path(os.getenv("RECORDER_HOURLY_DIR", "/runtime/market_recorder/hourly"))
     max_snapshot_bytes = env_int("RECORDER_MAX_SNAPSHOT_BYTES", DEFAULT_MAX_SNAPSHOT_BYTES)
+    retention_hours = max(1, env_int("RECORDER_RETENTION_HOURS", DEFAULT_RETENTION_HOURS))
     binance_url = os.getenv("RECORDER_BINANCE_WS_URL", BINANCE_FUTURES_WS.format(symbol_lower=symbol.lower()))
     okx_url = os.getenv("RECORDER_OKX_WS_URL", OKX_PUBLIC_WS)
 
@@ -537,6 +652,9 @@ def main() -> int:
     shared = SharedBook()
     started_at = now_ms()
     snapshots_written = 0
+    last_retention_maintenance_ms = 0
+    retention = retention_summary(hourly_dir, symbol)
+    retention["retention_hours_target"] = retention_hours
 
     def request_stop(signum: int, _frame: Any) -> None:
         print(f"[market-recorder] Received signal {signum}, stopping.", flush=True)
@@ -553,12 +671,21 @@ def main() -> int:
         thread.start()
 
     print(
-        f"[market-recorder] Started read-only XAUT recorder interval={interval_ms}ms symbol={symbol} okx={okx_inst_id}",
+        f"[market-recorder] Started read-only XAUT recorder interval={interval_ms}ms symbol={symbol} okx={okx_inst_id} retention_hours={retention_hours}",
         flush=True,
     )
     while not stop.is_set():
         cycle_started = time.monotonic()
         snapshots_written += 1
+        current_ms = now_ms()
+        if current_ms - last_retention_maintenance_ms >= RETENTION_MAINTENANCE_INTERVAL_MS:
+            retention = maintain_hourly_retention(
+                hourly_dir,
+                symbol,
+                retention_hours=retention_hours,
+                current_timestamp_ms=current_ms,
+            )
+            last_retention_maintenance_ms = current_ms
         snapshot = shared.snapshot(
             symbol=symbol,
             okx_inst_id=okx_inst_id,
@@ -567,6 +694,10 @@ def main() -> int:
             started_at_ms=started_at,
         )
         snapshot["snapshot_path"] = str(snapshot_path)
+        snapshot["hourly_dir"] = str(hourly_dir)
+        snapshot["retention"] = retention
+        hourly_path = append_hourly_snapshot(hourly_dir, symbol, snapshot)
+        snapshot["hourly_snapshot_path"] = str(hourly_path)
         atomic_write_json(state_path, snapshot)
         append_snapshot(snapshot_path, snapshot, max_bytes=max_snapshot_bytes)
         elapsed = (time.monotonic() - cycle_started) * 1000
@@ -582,10 +713,11 @@ def main() -> int:
     final_snapshot["stopped_at_ms"] = now_ms()
     final_snapshot["stopped_at"] = iso_from_ms(final_snapshot["stopped_at_ms"])
     final_snapshot["status"] = "stopped"
+    final_snapshot["hourly_dir"] = str(hourly_dir)
+    final_snapshot["retention"] = retention_summary(hourly_dir, symbol)
     atomic_write_json(state_path, final_snapshot)
     return 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
