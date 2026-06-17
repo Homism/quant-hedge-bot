@@ -8,15 +8,61 @@
   </head>
   <body>
     <main class="shell">
-      <header class="topbar">
-        <div>
-          <h1>V2 量化对冲模拟盘看板</h1>
-          <p>只读显示 BTC / ETH / SOL / XAUT 的行情、策略、模拟交易和风控状态</p>
+      <header class="topbar hero">
+        <div class="hero-main">
+          <div class="eyebrow">
+            <span>Quant Hedge Console</span>
+            <span>Dry-run Research</span>
+          </div>
+          <h1>量化对冲监控台</h1>
+          <p>BTC / ETH / SOL / XAUT 的模拟盘、风控、跨所行情和延迟价差集中监控。</p>
+          <div class="hero-badges" aria-label="系统安全状态">
+            <span class="mode-chip safe">只读</span>
+            <span class="mode-chip safe">Dry-run</span>
+            <span class="mode-chip neutral">无 API Key</span>
+            <span class="mode-chip neutral">localhost only</span>
+          </div>
         </div>
-        <div class="timestamp" id="updated-at">加载中...</div>
+        <div class="hero-side" aria-label="运行环境">
+          <div class="system-label">系统状态</div>
+          <div class="system-state">Research Mode</div>
+          <div class="timestamp" id="updated-at">加载中...</div>
+        </div>
       </header>
 
+      <section class="ops-strip" aria-label="运行边界">
+        <div>
+          <span class="strip-label">执行权限</span>
+          <strong>交易动作禁用</strong>
+        </div>
+        <div>
+          <span class="strip-label">行情源</span>
+          <strong>Binance Futures / OKX Public</strong>
+        </div>
+        <div>
+          <span class="strip-label">采样</span>
+          <strong>200 ms</strong>
+        </div>
+        <div>
+          <span class="strip-label">数据留存</span>
+          <strong>72 h</strong>
+        </div>
+      </section>
+
+      <div class="section-title">
+        <div>
+          <h2>全局概览</h2>
+          <p>模拟盘状态、PnL、持仓和风控信号。</p>
+        </div>
+      </div>
       <section class="overview" id="overview" aria-label="全局总览"></section>
+
+      <div class="section-title">
+        <div>
+          <h2>跨所高速行情</h2>
+          <p>XAUT 主线价差与延迟监控。</p>
+        </div>
+      </div>
       <section class="recorder-panel" id="market-recorder" aria-label="高速行情 Recorder">
         <div class="recorder-head">
           <div>
@@ -29,6 +75,13 @@
           <div class="empty small">正在读取 recorder 状态...</div>
         </div>
       </section>
+
+      <div class="section-title">
+        <div>
+          <h2>市场图表</h2>
+          <p>外部行情图表，不参与策略执行。</p>
+        </div>
+      </div>
       <section class="tv-panel" aria-label="TradingView 市场图表">
         <div class="tv-panel-head">
           <div>
@@ -55,6 +108,13 @@
           免费 TradingView Widget 只用于行情观察，不连接交易账户，不发送交易指令。
         </div>
       </section>
+
+      <div class="section-title">
+        <div>
+          <h2>机器人明细</h2>
+          <p>每个 dry-run bot 的行情、策略判断、模拟交易和风控状态。</p>
+        </div>
+      </div>
       <section class="grid" id="bot-grid" aria-label="机器人状态卡片"></section>
     </main>
     <script src="/app.js"></script>
